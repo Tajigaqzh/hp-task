@@ -1,7 +1,10 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { SubmitEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { MonitorUp } from "lucide-react";
 
-import { useTaskStore } from "./stores/task-store";
-import type { TaskDraft } from "./types/task";
+import { useTaskStore } from "../stores/task-store.ts";
+import type { TaskDraft } from "../types/task.ts";
 
 const TAG_OPTIONS = [
   { label: "工作", value: "#2563eb" },
@@ -10,7 +13,7 @@ const TAG_OPTIONS = [
   { label: "想法", value: "#7c3aed" },
 ] as const;
 
-function App() {
+export function MainWindow() {
   const { tasks, loading, saving, error, loadTasks, addTask, removeTask } =
     useTaskStore();
   const [draft, setDraft] = useState<TaskDraft>({
@@ -29,7 +32,11 @@ function App() {
     [tasks],
   );
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleOpenDesktopWidget() {
+    await invoke("open_desktop_widget");
+  }
+
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!draft.name.trim() || !draft.info.trim()) {
@@ -61,8 +68,20 @@ function App() {
               本地任务管理
             </h1>
           </div>
-          <div className="text-sm text-slate-500">
-            共 <span className="font-semibold text-slate-900">{tasks.length}</span> 个任务
+          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span>
+              共 <span className="font-semibold text-slate-900">{tasks.length}</span>{" "}
+              个任务
+            </span>
+            <button
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-100"
+              onClick={handleOpenDesktopWidget}
+              title="打开桌面组件"
+              type="button"
+            >
+              <MonitorUp className="h-4 w-4" />
+              桌面组件
+            </button>
           </div>
         </header>
 
@@ -225,5 +244,3 @@ function App() {
     </main>
   );
 }
-
-export default App;

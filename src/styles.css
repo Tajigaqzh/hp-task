@@ -24,6 +24,15 @@ body {
   margin: 0;
 }
 
+::selection {
+  color: #ffffff;
+  background: #2f6f63;
+}
+
+.desktop-widget-shell {
+  background: transparent;
+}
+
 button,
 input,
 textarea {
@@ -32,4 +41,8 @@ textarea {
 
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }

@@ -13,7 +13,8 @@ pub fn run() {
             commands::greet,
             commands::list_tasks,
             commands::add_task,
-            commands::remove_task
+            commands::remove_task,
+            commands::open_desktop_widget
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

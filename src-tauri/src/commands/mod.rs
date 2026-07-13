@@ -1,4 +1,5 @@
 use crate::features::task::{Task, TaskDraft, TaskStore};
+use crate::system::widget;
 
 /// 返回一段用于验证前后端调用链路的问候文案。
 #[tauri::command]
@@ -22,4 +23,10 @@ pub fn add_task(draft: TaskDraft) -> Result<Task, String> {
 #[tauri::command]
 pub fn remove_task(task_id: &str) -> Result<bool, String> {
     TaskStore::default().remove(task_id)
+}
+
+/// 打开或恢复桌面半透明任务组件窗口。
+#[tauri::command]
+pub async fn open_desktop_widget(app: tauri::AppHandle) -> Result<(), String> {
+    widget::open(&app)
 }
