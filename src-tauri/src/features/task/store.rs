@@ -4,7 +4,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use super::{Task, TaskDraft};
+use super::{Task, TaskDraft, TaskUpdate};
 
 const DATA_DIR_ENV: &str = "HP_TASK_DATA_DIR";
 const DATA_FILE_NAME: &str = "tasks.json";
@@ -38,6 +38,7 @@ impl TaskStore {
             tag: draft.tag,
             end_date: draft.end_date,
             created_at: now,
+            completed_at: None,
         };
 
         tasks.push(task.clone());
@@ -48,6 +49,44 @@ impl TaskStore {
     /// 读取全部任务。
     pub fn list(&self) -> Result<Vec<Task>, String> {
         self.load_all()
+    }
+
+    /// 编辑指定任务，返回更新后的任务。
+    pub fn update(&self, task_id: &str, update: TaskUpdate) -> Result<Option<Task>, String> {
+        let mut tasks = self.load_all()?;
+        let mut updated_task = None;
+
+        if let Some(task) = tasks.iter_mut().find(|task| task.id == task_id) {
+            task.name = update.name;
+            task.info = update.info;
+            task.tag = update.tag;
+            task.end_date = update.end_date;
+            updated_task = Some(task.clone());
+        }
+
+        if updated_task.is_some() {
+            self.save_all(&tasks)?;
+        }
+
+        Ok(updated_task)
+    }
+
+    /// 把任务标记为已完成。
+    pub fn complete(&self, task_id: &str) -> Result<Option<Task>, String> {
+        let mut tasks = self.load_all()?;
+        let now = current_timestamp_millis()?;
+        let mut completed_task = None;
+
+        if let Some(task) = tasks.iter_mut().find(|task| task.id == task_id) {
+            task.completed_at = Some(now);
+            completed_task = Some(task.clone());
+        }
+
+        if completed_task.is_some() {
+            self.save_all(&tasks)?;
+        }
+
+        Ok(completed_task)
     }
 
     /// 按任务 id 删除任务，返回是否确实删除了数据。
@@ -96,7 +135,7 @@ impl TaskStore {
 }
 
 /// 生成默认任务数据文件路径。
-fn default_data_file() -> PathBuf {
+pub fn default_data_file() -> PathBuf {
     data_dir().join(DATA_FILE_NAME)
 }
 

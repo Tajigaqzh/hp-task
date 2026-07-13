@@ -1,6 +1,6 @@
 use std::{env, process::ExitCode};
 
-use crate::features::task::{TaskDraft, TaskStore};
+use crate::features::task::{TaskDraft, TaskStore, TaskUpdate};
 
 /// 从当前进程参数执行 CLI，并把结果写入标准输出或标准错误。
 pub fn run_from_env() -> ExitCode {
@@ -60,6 +60,16 @@ fn run_task_command(args: &[String]) -> Result<String, String> {
             }))
             .map_err(|error| error.to_string())
         }
+        "update" => {
+            let (task_id, update) = parse_task_update_args(&store, &args[1..])?;
+            let task = store.update(&task_id, update)?;
+            serde_json::to_string_pretty(&task).map_err(|error| error.to_string())
+        }
+        "complete" => {
+            let task_id = parse_task_remove_args(&args[1..])?;
+            let task = store.complete(&task_id)?;
+            serde_json::to_string_pretty(&task).map_err(|error| error.to_string())
+        }
         "-h" | "--help" | "help" => Ok(usage()),
         _ => Err(format!("未知 task 子命令: {command}")),
     }
@@ -105,6 +115,54 @@ fn parse_task_remove_args(args: &[String]) -> Result<String, String> {
     }
 }
 
+/// 解析 task update 的命令行参数，未传入字段沿用原任务内容。
+fn parse_task_update_args(
+    store: &TaskStore,
+    args: &[String],
+) -> Result<(String, TaskUpdate), String> {
+    let mut task_id = None;
+    let mut name = None;
+    let mut info = None;
+    let mut tag = None;
+    let mut end_date = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--id" => task_id = Some(read_flag_value(args, &mut index, "--id")?),
+            "--name" => name = Some(read_flag_value(args, &mut index, "--name")?),
+            "--info" => info = Some(read_flag_value(args, &mut index, "--info")?),
+            "--tag" => tag = Some(read_flag_value(args, &mut index, "--tag")?),
+            "--endDate" | "--end-date" => {
+                end_date = Some(read_flag_value(args, &mut index, "--endDate")?)
+            }
+            unknown if task_id.is_none() && !unknown.starts_with("--") => {
+                task_id = Some(unknown.to_string());
+            }
+            unknown => return Err(format!("未知参数: {unknown}")),
+        }
+
+        index += 1;
+    }
+
+    let task_id = required_value(task_id, "--id")?;
+    let task = store
+        .list()?
+        .into_iter()
+        .find(|task| task.id == task_id)
+        .ok_or_else(|| format!("任务不存在: {task_id}"))?;
+
+    Ok((
+        task_id,
+        TaskUpdate {
+            name: name.unwrap_or(task.name),
+            info: info.unwrap_or(task.info),
+            tag: tag.or(task.tag),
+            end_date: end_date.or(task.end_date),
+        },
+    ))
+}
+
 /// 读取形如 `--name value` 的参数值，并把索引推进到值的位置。
 fn read_flag_value(args: &[String], index: &mut usize, flag: &str) -> Result<String, String> {
     let value_index = *index + 1;
@@ -131,10 +189,14 @@ fn usage() -> String {
         "用法:",
         "  hp task add --name <名称> --info <说明> [--tag <颜色>] [--endDate <日期>]",
         "  hp task list",
+        "  hp task update <id> [--name <名称>] [--info <说明>] [--tag <颜色>] [--endDate <日期>]",
+        "  hp task complete <id>",
         "  hp task remove <id>",
         "",
         "示例:",
         "  hp task add --name 初始化任务 --info 初始化事件 --tag \"#1ff\" --endDate 2026-07-03",
+        "  hp task update task-1 --name 调整任务 --endDate 2026-07-14",
+        "  hp task complete task-1",
     ]
     .join("\n")
 }

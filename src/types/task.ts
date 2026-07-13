@@ -5,6 +5,7 @@ export interface Task {
   tag?: string | null;
   endDate?: string | null;
   createdAt: number;
+  completedAt?: number | null;
 }
 
 export interface TaskDraft {
@@ -13,3 +14,5 @@ export interface TaskDraft {
   tag?: string;
   endDate?: string;
 }
+
+export type TaskUpdate = TaskDraft;

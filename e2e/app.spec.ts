@@ -11,15 +11,28 @@ const tasks = [
   },
 ];
 
+type MockTask = (typeof tasks)[number];
+type AddTaskArgs = {
+  draft?: Pick<MockTask, "name" | "info" | "tag" | "endDate">;
+};
+
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript((mockTasks) => {
+  await page.addInitScript((mockTasks: MockTask[]) => {
     window.__TAURI_INTERNALS__ = {
       metadata: {
         currentWindow: { label: "main" },
       },
-      invoke(command: string) {
+      invoke(command: string, args?: AddTaskArgs) {
         if (command === "list_tasks") {
           return Promise.resolve(mockTasks);
+        }
+
+        if (command === "add_task" && args?.draft) {
+          return Promise.resolve({
+            ...args.draft,
+            id: "task-added",
+            createdAt: 3,
+          });
         }
 
         if (command === "open_desktop_widget") {
@@ -56,4 +69,19 @@ test("renders tasks and requests the desktop widget", async ({ page }) => {
   await page.getByRole("button", { name: "桌面组件" }).click();
 
   await expect.poll(() => widgetOpened).toBe(true);
+});
+
+test("accepts task form edits without losing event targets", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByLabel("名称").fill("修复表单输入");
+  await page.getByLabel("说明").fill("先读取输入值再更新状态");
+  await page.getByLabel("分类").selectOption("#dc2626");
+  await page.getByLabel("截止日期").fill("2026-07-14");
+
+  await page.getByRole("button", { name: "保存任务" }).click();
+
+  await expect(page.getByText("修复表单输入")).toBeVisible();
+  await expect(page.getByText("先读取输入值再更新状态")).toBeVisible();
+  await expect(page.getByText("截止 2026-07-14")).toBeVisible();
 });
