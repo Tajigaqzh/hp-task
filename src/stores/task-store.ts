@@ -12,6 +12,7 @@ interface TaskState {
   addTask: (draft: TaskDraft) => Promise<void>;
   updateTask: (taskId: string, update: TaskUpdate) => Promise<void>;
   completeTask: (taskId: string) => Promise<void>;
+  reopenTask: (taskId: string) => Promise<void>;
   removeTask: (taskId: string) => Promise<void>;
   clearError: () => void;
 }
@@ -72,6 +73,22 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
     try {
       const task = await invoke<Task | null>("complete_task", { taskId });
+
+      if (task) {
+        set({
+          tasks: get().tasks.map((current) => (current.id === task.id ? task : current)),
+        });
+      }
+    } catch (error) {
+      set({ error: toErrorMessage(error) });
+    }
+  },
+
+  async reopenTask(taskId) {
+    set({ error: null });
+
+    try {
+      const task = await invoke<Task | null>("reopen_task", { taskId });
 
       if (task) {
         set({

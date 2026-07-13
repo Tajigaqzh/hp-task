@@ -89,6 +89,23 @@ impl TaskStore {
         Ok(completed_task)
     }
 
+    /// 把已完成任务移回未完成。
+    pub fn reopen(&self, task_id: &str) -> Result<Option<Task>, String> {
+        let mut tasks = self.load_all()?;
+        let mut reopened_task = None;
+
+        if let Some(task) = tasks.iter_mut().find(|task| task.id == task_id) {
+            task.completed_at = None;
+            reopened_task = Some(task.clone());
+        }
+
+        if reopened_task.is_some() {
+            self.save_all(&tasks)?;
+        }
+
+        Ok(reopened_task)
+    }
+
     /// 按任务 id 删除任务，返回是否确实删除了数据。
     pub fn remove(&self, task_id: &str) -> Result<bool, String> {
         let mut tasks = self.load_all()?;

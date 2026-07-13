@@ -15,6 +15,23 @@ type MockTask = (typeof tasks)[number];
 type AddTaskArgs = {
   draft?: Pick<MockTask, "name" | "info" | "tag" | "endDate">;
 };
+type TauriInternalsMock = {
+  metadata: {
+    currentWindow: { label: string };
+  };
+  invoke: (
+    command: string,
+    args?: AddTaskArgs,
+  ) => Promise<MockTask[] | MockTask | null | void>;
+  transformCallback: () => number;
+  unregisterCallback: () => void;
+};
+
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__: TauriInternalsMock;
+  }
+}
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript((mockTasks: MockTask[]) => {
@@ -50,25 +67,13 @@ test.beforeEach(async ({ page }) => {
   }, tasks);
 });
 
-test("renders tasks and requests the desktop widget", async ({ page }) => {
-  let widgetOpened = false;
-  await page.exposeFunction("markWidgetOpened", () => {
-    widgetOpened = true;
-  });
-  await page.addInitScript(() => {
-    window.addEventListener("desktop-widget-opened", () => {
-      window.markWidgetOpened();
-    });
-  });
-
+test("renders tasks and keeps settings available", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "本地任务管理" })).toBeVisible();
   await expect(page.getByText("整理桌面组件")).toBeVisible();
-
-  await page.getByRole("button", { name: "桌面组件" }).click();
-
-  await expect.poll(() => widgetOpened).toBe(true);
+  await expect(page.getByRole("link", { name: "设置" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "桌面组件" })).toHaveCount(0);
 });
 
 test("accepts task form edits without losing event targets", async ({ page }) => {

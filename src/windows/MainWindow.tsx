@@ -1,6 +1,5 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import {
   CalendarClock,
   Check,
@@ -145,10 +144,6 @@ export function MainWindow() {
     closeEditor();
   }
 
-  async function handleOpenDesktopWidget() {
-    await invoke("open_desktop_widget");
-  }
-
   return (
     <main className="min-h-screen bg-[#edf3f1] text-[#162427]">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6 sm:px-8">
@@ -196,14 +191,6 @@ export function MainWindow() {
               >
                 <Settings className="h-4 w-4" />
               </Link>
-              <button
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#cbd9d5] bg-white px-3 text-sm font-semibold text-[#48635f] transition hover:border-[#9fb3ae] hover:bg-[#f2f7f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f6f63]/20"
-                onClick={() => void handleOpenDesktopWidget()}
-                type="button"
-              >
-                <ListChecks className="h-4 w-4" />
-                桌面组件
-              </button>
             </div>
           </div>
         </header>

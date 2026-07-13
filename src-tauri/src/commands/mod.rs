@@ -45,6 +45,16 @@ pub fn complete_task(app: tauri::AppHandle, task_id: &str) -> Result<Option<Task
     Ok(task)
 }
 
+/// 把已完成任务移回未完成。
+#[tauri::command]
+pub fn reopen_task(app: tauri::AppHandle, task_id: &str) -> Result<Option<Task>, String> {
+    let task = TaskStore::default().reopen(task_id)?;
+    if task.is_some() {
+        emit_tasks_changed(&app);
+    }
+    Ok(task)
+}
+
 /// 从 Tauri 本地任务缓存删除指定任务。
 #[tauri::command]
 pub fn remove_task(app: tauri::AppHandle, task_id: &str) -> Result<bool, String> {

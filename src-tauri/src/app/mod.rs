@@ -25,6 +25,7 @@ pub fn run() {
             commands::add_task,
             commands::update_task,
             commands::complete_task,
+            commands::reopen_task,
             commands::remove_task,
             commands::open_desktop_widget,
             commands::get_app_settings,

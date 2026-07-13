@@ -1,16 +1,39 @@
+import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import { MainWindow } from "./MainWindow.tsx";
-import { SettingsWindow } from "./SettingsWindow.tsx";
+type WindowRoute = {
+  path: string;
+  Component: LazyExoticComponent<ComponentType>;
+};
+
+const windowRoutes: WindowRoute[] = [
+  {
+    path: "/",
+    Component: lazy(() =>
+      import("./MainWindow.tsx").then((module) => ({ default: module.MainWindow })),
+    ),
+  },
+  {
+    path: "/settings",
+    Component: lazy(() =>
+      import("./SettingsWindow.tsx").then((module) => ({
+        default: module.SettingsWindow,
+      })),
+    ),
+  },
+];
 
 export function AppRoutes() {
   return (
     <HashRouter>
-      <Routes>
-        <Route element={<MainWindow />} path="/" />
-        <Route element={<SettingsWindow />} path="/settings" />
-        <Route element={<Navigate replace to="/" />} path="*" />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          {windowRoutes.map(({ Component, path }) => (
+            <Route element={<Component />} key={path} path={path} />
+          ))}
+          <Route element={<Navigate replace to="/" />} path="*" />
+        </Routes>
+      </Suspense>
     </HashRouter>
   );
 }

@@ -33,6 +33,15 @@ body {
   background: transparent;
 }
 
+.desktop-widget-scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.desktop-widget-scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 button,
 input,
 textarea {

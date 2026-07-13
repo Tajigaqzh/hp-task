@@ -1,13 +1,27 @@
+import { lazy, Suspense } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import { AppRoutes } from "./AppRoutes.tsx";
-import { DesktopWidgetWindow } from "./desktop-widget/DesktopWidgetWindow.tsx";
 import { DESKTOP_WIDGET_WINDOW_LABEL } from "./window-labels.ts";
 
-export default function WindowRoot() {
-  if (getCurrentWindow().label === DESKTOP_WIDGET_WINDOW_LABEL) {
-    return <DesktopWidgetWindow />;
-  }
+const AppRoutes = lazy(() =>
+  import("./AppRoutes.tsx").then((module) => ({ default: module.AppRoutes })),
+);
 
-  return <AppRoutes />;
+const DesktopWidgetWindow = lazy(() =>
+  import("./desktop-widget/DesktopWidgetWindow.tsx").then((module) => ({
+    default: module.DesktopWidgetWindow,
+  })),
+);
+
+export default function WindowRoot() {
+  const Component =
+    getCurrentWindow().label === DESKTOP_WIDGET_WINDOW_LABEL
+      ? DesktopWidgetWindow
+      : AppRoutes;
+
+  return (
+    <Suspense fallback={null}>
+      <Component />
+    </Suspense>
+  );
 }
