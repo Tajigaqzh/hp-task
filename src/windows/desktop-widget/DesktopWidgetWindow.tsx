@@ -5,20 +5,17 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
+import { DatePickerField } from "../../components/ui/DatePickerField.tsx";
 import { useTaskSync } from "../../hooks/use-task-sync.ts";
+import { mergeSettings } from "../../settings/default-settings.ts";
+import { getWidgetStyle } from "../../settings/theme.ts";
 import { useTaskStore } from "../../stores/task-store.ts";
 import type { AppSettings } from "../../types/settings.ts";
 import type { TaskDraft } from "../../types/task.ts";
+import { getTodayDateInputValue } from "../../utils/task-date.ts";
 import { DesktopWidgetHeader } from "./DesktopWidgetHeader.tsx";
 import { DesktopWidgetSummary } from "./DesktopWidgetSummary.tsx";
 import { DesktopWidgetTaskList } from "./DesktopWidgetTaskList.tsx";
-
-function getTodayDateInputValue() {
-  const now = new Date();
-  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
-
-  return localDate.toISOString().slice(0, 10);
-}
 
 export function DesktopWidgetWindow() {
   const {
@@ -33,6 +30,7 @@ export function DesktopWidgetWindow() {
     reopenTask,
   } = useTaskStore();
   const [pinned, setPinned] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(() => mergeSettings({}));
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [draft, setDraft] = useState<TaskDraft>(() => ({
     name: "",
@@ -46,8 +44,10 @@ export function DesktopWidgetWindow() {
     document.body.classList.add("desktop-widget-shell");
     loadTasks();
     invoke<AppSettings>("get_app_settings")
-      .then((settings) => {
-        setPinned(settings.desktopWidgetPinned);
+      .then((loadedSettings) => {
+        const nextSettings = mergeSettings(loadedSettings ?? {});
+        setSettings(nextSettings);
+        setPinned(nextSettings.desktopWidgetPinned);
       })
       .catch((loadError) => {
         console.error("读取桌面组件设置失败", loadError);
@@ -132,8 +132,9 @@ export function DesktopWidgetWindow() {
     <main className="flex h-screen items-start bg-transparent p-3 text-[#13282b]">
       <motion.section
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="flex max-h-full w-full flex-col overflow-hidden rounded-xl border border-white/30 bg-[#173b3f]/95 text-white shadow-2xl shadow-[#0f2326]/30 backdrop-blur-2xl"
+        className="flex max-h-full w-full flex-col overflow-hidden rounded-xl border border-white/30 text-white shadow-2xl shadow-[#0f2326]/30 backdrop-blur-2xl"
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        style={getWidgetStyle(settings)}
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       >
         <DesktopWidgetHeader
@@ -201,15 +202,12 @@ export function DesktopWidgetWindow() {
                       value={draft.info}
                     />
                     <div className="flex items-center gap-2">
-                      <input
-                        aria-label="新增任务截止日期"
-                        className="h-8 min-w-0 flex-1 rounded-md border border-white/10 bg-white/[0.08] px-2.5 text-xs text-white outline-none focus:border-[#8fc8bd]"
-                        onChange={(event) => {
-                          const { value } = event.currentTarget;
-
-                          setDraft((current) => ({ ...current, endDate: value }));
-                        }}
-                        type="date"
+                      <DatePickerField
+                        className="min-w-0 flex-1"
+                        label="新增任务截止日期"
+                        onChange={(value) =>
+                          setDraft((current) => ({ ...current, endDate: value }))
+                        }
                         value={draft.endDate}
                       />
                       <button

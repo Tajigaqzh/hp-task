@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "react-day-picker/style.css";
 
 :root {
   font-family:
@@ -16,6 +17,23 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  --app-bg: #eef3f2;
+  --app-sidebar: #f7faf9;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f8fbfa;
+  --app-surface-hover: #f1f6f4;
+  --app-input: #fbfdfc;
+  --app-border: #d8e2df;
+  --app-border-strong: #c5d2cf;
+  --app-border-hover: #9fb3ae;
+  --app-text: #142426;
+  --app-text-secondary: #48635f;
+  --app-text-muted: #7d918d;
+  --app-accent: #2f6f63;
+  --app-accent-strong: #173b3f;
+  --app-accent-soft: #2f6f6326;
+  --app-nav-active: #e2f0ec;
+  --app-disabled: #a8b8b4;
 }
 
 body {
@@ -54,4 +72,37 @@ button {
 
 button:disabled {
   cursor: not-allowed;
+}
+
+.app-date-picker .rdp-root {
+  --rdp-accent-color: var(--app-accent);
+  --rdp-accent-background-color: var(--app-nav-active);
+  --rdp-day_button-border-radius: 6px;
+  --rdp-day_button-width: 34px;
+  --rdp-day_button-height: 34px;
+  --rdp-nav_button-width: 30px;
+  --rdp-nav_button-height: 30px;
+  color: var(--app-text);
+  font-size: 13px;
+}
+
+.app-date-picker .rdp-caption_label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.app-date-picker .rdp-weekday {
+  color: var(--app-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.app-date-picker .rdp-day_button {
+  border-radius: 6px;
+}
+
+.app-date-picker .rdp-selected .rdp-day_button {
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+  color: #ffffff;
 }

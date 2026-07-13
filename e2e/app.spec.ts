@@ -15,6 +15,16 @@ type MockTask = (typeof tasks)[number];
 type AddTaskArgs = {
   draft?: Pick<MockTask, "name" | "info" | "tag" | "endDate">;
 };
+type MockSettings = {
+  theme: string;
+  appAccentColor: string;
+  widgetStyle: string;
+  widgetBackgroundColor: string;
+  widgetOpacity: number;
+  desktopWidgetEnabled: boolean;
+  desktopWidgetPinned: boolean;
+  desktopWidgetPosition: null;
+};
 type TauriInternalsMock = {
   metadata: {
     currentWindow: { label: string };
@@ -22,7 +32,7 @@ type TauriInternalsMock = {
   invoke: (
     command: string,
     args?: AddTaskArgs,
-  ) => Promise<MockTask[] | MockTask | null | void>;
+  ) => Promise<MockTask[] | MockTask | MockSettings | null | void>;
   transformCallback: () => number;
   unregisterCallback: () => void;
 };
@@ -42,6 +52,19 @@ test.beforeEach(async ({ page }) => {
       invoke(command: string, args?: AddTaskArgs) {
         if (command === "list_tasks") {
           return Promise.resolve(mockTasks);
+        }
+
+        if (command === "get_app_settings") {
+          return Promise.resolve({
+            theme: "system",
+            appAccentColor: "#2f6f63",
+            widgetStyle: "compact",
+            widgetBackgroundColor: "#173b3f",
+            widgetOpacity: 0.95,
+            desktopWidgetEnabled: false,
+            desktopWidgetPinned: false,
+            desktopWidgetPosition: null,
+          });
         }
 
         if (command === "add_task" && args?.draft) {
@@ -82,7 +105,8 @@ test("accepts task form edits without losing event targets", async ({ page }) =>
   await page.getByLabel("名称").fill("修复表单输入");
   await page.getByLabel("说明").fill("先读取输入值再更新状态");
   await page.getByLabel("分类").selectOption("#dc2626");
-  await page.getByLabel("截止日期").fill("2026-07-14");
+  await page.getByRole("button", { name: "截止日期" }).click();
+  await page.locator(".rdp-day_button").filter({ hasText: "14" }).click();
 
   await page.getByRole("button", { name: "保存任务" }).click();
 

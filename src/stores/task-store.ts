@@ -21,6 +21,10 @@ function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
+function areTasksEqual(left: Task[], right: Task[]) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
   loading: false,
@@ -28,11 +32,25 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   error: null,
 
   async loadTasks() {
-    set({ loading: true, error: null });
+    if (!get().tasks.length && !get().loading) {
+      set({ loading: true, error: null });
+    }
 
     try {
       const tasks = await invoke<Task[]>("list_tasks");
-      set({ tasks, loading: false });
+      set((state) => {
+        const tasksChanged = !areTasksEqual(state.tasks, tasks);
+
+        if (!tasksChanged && !state.loading && state.error === null) {
+          return state;
+        }
+
+        return {
+          tasks: tasksChanged ? tasks : state.tasks,
+          loading: false,
+          error: null,
+        };
+      });
     } catch (error) {
       set({ error: toErrorMessage(error), loading: false });
     }

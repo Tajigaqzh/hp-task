@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
+import { DatePickerField } from "../../components/ui/DatePickerField.tsx";
 import type { Task, TaskUpdate } from "../../types/task.ts";
 import { formatTaskDate, getTaskDateClass } from "./desktop-widget-utils.ts";
 
@@ -208,40 +209,44 @@ export function DesktopWidgetTaskList({
               <div className="grid gap-2">
                 <input
                   className="h-8 rounded-md border border-white/10 bg-white/[0.08] px-2 text-xs font-semibold text-white outline-none placeholder:text-white/35 focus:border-[#8fc8bd]"
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const { value } = event.currentTarget;
+
                     setForm((current) => ({
                       ...current,
-                      name: event.currentTarget.value,
-                    }))
-                  }
+                      name: value,
+                    }));
+                  }}
                   placeholder="名称"
                   required
                   value={form.name}
                 />
                 <textarea
                   className="min-h-16 resize-none rounded-md border border-white/10 bg-white/[0.08] px-2 py-1.5 text-xs leading-5 text-white outline-none placeholder:text-white/35 focus:border-[#8fc8bd]"
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const { value } = event.currentTarget;
+
                     setForm((current) => ({
                       ...current,
-                      info: event.currentTarget.value,
-                    }))
-                  }
+                      info: value,
+                    }));
+                  }}
                   placeholder="说明"
                   value={form.info}
                 />
               </div>
             ) : null}
             <div className="mt-2 flex items-center gap-1">
-              <input
-                className="h-8 min-w-0 flex-1 rounded-md border border-white/10 bg-white/[0.08] px-2 text-xs text-white outline-none focus:border-[#8fc8bd]"
-                onChange={(event) =>
+              <DatePickerField
+                className="min-w-0 flex-1"
+                label="编辑任务截止日期"
+                onChange={(value) =>
                   setForm((current) => ({
                     ...current,
-                    endDate: event.currentTarget.value,
+                    endDate: value,
                   }))
                 }
                 required
-                type="date"
                 value={form.endDate}
               />
               <button

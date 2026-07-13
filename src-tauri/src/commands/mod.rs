@@ -77,12 +77,21 @@ pub fn get_app_settings() -> Result<AppSettings, String> {
     SettingsStore::default().load()
 }
 
-/// 保存主题和桌面组件风格设置。
+/// 保存应用外观和桌面组件风格设置。
 #[tauri::command]
-pub fn update_app_preferences(theme: String, widget_style: String) -> Result<AppSettings, String> {
+pub fn update_app_preferences(
+    theme: String,
+    app_accent_color: String,
+    widget_style: String,
+    widget_background_color: String,
+    widget_opacity: f64,
+) -> Result<AppSettings, String> {
     SettingsStore::default().update(|settings| {
         settings.theme = theme;
+        settings.app_accent_color = app_accent_color;
         settings.widget_style = widget_style;
+        settings.widget_background_color = widget_background_color;
+        settings.widget_opacity = widget_opacity.clamp(0.45, 1.0);
     })
 }
 

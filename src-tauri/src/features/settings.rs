@@ -16,10 +16,19 @@ pub struct WindowPosition {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
-    #[serde(default)]
+    #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(default = "default_app_accent_color", rename = "appAccentColor")]
+    pub app_accent_color: String,
     #[serde(default, rename = "widgetStyle")]
     pub widget_style: String,
+    #[serde(
+        default = "default_widget_background_color",
+        rename = "widgetBackgroundColor"
+    )]
+    pub widget_background_color: String,
+    #[serde(default = "default_widget_opacity", rename = "widgetOpacity")]
+    pub widget_opacity: f64,
     #[serde(default, rename = "desktopWidgetEnabled")]
     pub desktop_widget_enabled: bool,
     #[serde(default, rename = "desktopWidgetPinned")]
@@ -31,13 +40,32 @@ pub struct AppSettings {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            theme: "system".to_string(),
+            theme: default_theme(),
+            app_accent_color: default_app_accent_color(),
             widget_style: "compact".to_string(),
+            widget_background_color: default_widget_background_color(),
+            widget_opacity: default_widget_opacity(),
             desktop_widget_enabled: false,
             desktop_widget_pinned: false,
             desktop_widget_position: None,
         }
     }
+}
+
+fn default_theme() -> String {
+    "system".to_string()
+}
+
+fn default_app_accent_color() -> String {
+    "#2f6f63".to_string()
+}
+
+fn default_widget_background_color() -> String {
+    "#173b3f".to_string()
+}
+
+fn default_widget_opacity() -> f64 {
+    0.95
 }
 
 pub struct SettingsStore {
